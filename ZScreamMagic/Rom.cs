@@ -32,7 +32,8 @@ namespace ZScreamMagic
 
             romRegion = DetectRomRegion(romData);
             //Create all gfx data in Graphics static class as 4bpp indexed format
-            Graphics.CreateAllGfxData(romData);
+            ZGraphics.CreateAllGfxData(romData);
+            ZGraphics.CreateAllPalettes(romData);
 
             LogData.SaveToFile("Logs.txt");
             Console.WriteLine("Rom Region Detected : " + romRegion.ToString());

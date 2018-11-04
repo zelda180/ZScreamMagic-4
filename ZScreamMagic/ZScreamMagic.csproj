@@ -48,7 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Graphics.cs" />
+    <Compile Include="ZGraphics.cs" />
     <Compile Include="GFX.cs" />
     <Compile Include="LogData.cs" />
     <Compile Include="RomConstants.cs" />

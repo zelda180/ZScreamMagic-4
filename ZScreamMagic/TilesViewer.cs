@@ -36,17 +36,62 @@ namespace ZScreamMagic
         private void mainTilesDisplay_Paint(object sender, PaintEventArgs e)
         {
             //overworldPaletteGroup1
-            Color[] palettes = Graphics.ReadPalette(rom.romData, RomConstants.overworldPaletteMain, 35);
-            Color[] palettes = Graphics.ReadPalette(rom.romData, RomConstants.overworldPaletteAuxialiary, 21);
-            Color[] palettes = Graphics.ReadPalette(rom.romData, RomConstants.overworldPaletteGroup1, 105);
-            for (int y = 0; y < 12; y++)
+            drawMainPalette(e.Graphics, 0);
+            drawAux1Palette(e.Graphics, 4);
+            drawAux2Palette(e.Graphics, 2);
+            drawAnimatedPalette(e.Graphics, 7);
+
+        }
+
+
+        //============================================================================
+        //DEBUGING CODE
+        //============================================================================
+
+        public void drawMainPalette(Graphics g, int index)
+        {
+            for (int y = 0; y < 5; y++)
             {
                 for (int x = 0; x < 7; x++)
                 {
-                    e.Graphics.FillRectangle(new SolidBrush(palettes[x + (y * 7)]), new Rectangle(x * 16, y * 16, 16, 16));
+                    g.FillRectangle(new SolidBrush(ZGraphics.overworld_MainPalettes[index][x + (y*7)]), new Rectangle((x * 16), (y * 16)+(32), 16, 16));
                 }
             }
-
         }
+
+        public void drawAux1Palette(Graphics g, int index)
+        {
+            for (int y = 0; y < 3; y++)
+            {
+                for (int x = 0; x < 7; x++)
+                {
+                    g.FillRectangle(new SolidBrush(ZGraphics.overworld_AuxPalettes[index][x + (y * 7)]), new Rectangle((x * 16)+(8*16), (y * 16) + (32), 16, 16));
+                }
+            }
+        }
+
+        public void drawAux2Palette(Graphics g, int index)
+        {
+            for (int y = 0; y < 3; y++)
+            {
+                for (int x = 0; x < 7; x++)
+                {
+                    g.FillRectangle(new SolidBrush(ZGraphics.overworld_AuxPalettes[index][x + (y * 7)]), new Rectangle((x * 16) + (8 * 16), (y * 16) +(5*16), 16, 16));
+                }
+            }
+        }
+
+        public void drawAnimatedPalette(Graphics g, int index)
+        {
+            for (int y = 0; y < 1; y++)
+            {
+                for (int x = 0; x < 7; x++)
+                {
+                    g.FillRectangle(new SolidBrush(ZGraphics.overworld_AnimatedPalettes[index][x + (y * 7)]), new Rectangle((x * 16), (y * 16) + (7*16), 16, 16));
+                }
+            }
+        }
+
+
     }
 }

@@ -10,7 +10,7 @@ using ZCompressLibrary;
 
 namespace ZScreamMagic
 {
-    public static class Graphics
+    public static class ZGraphics
     {
         public static IntPtr allgfx16Ptr = Marshal.AllocHGlobal((128 * 7136) / 2);
         public static Color[][] overworld_MainPalettes = new Color[6][]; // 35 colors each, 7x5 (0,2 on grid)
@@ -233,7 +233,7 @@ namespace ZScreamMagic
             return colors;
         }
 
-        public static void ReadAllPalettes(byte[] romData)
+        public static void CreateAllPalettes(byte[] romData)
         {
             //public static Color[][] overworld_MainPalettes = new Color[6][]; 
             //public static Color[][] overworld_AuxPalettes = new Color[20][]; 
@@ -242,17 +242,17 @@ namespace ZScreamMagic
             //35 colors each, 7x5 (0,2 on grid)
             for (int i = 0; i < 6; i++)
             {
-                overworld_MainPalettes[i] = ReadPalette(romData, RomConstants.overworldPaletteMain + (i * 35), 35);
+                overworld_MainPalettes[i] = ReadPalette(romData, RomConstants.overworldPaletteMain + (i * (35*2)), 35);
             }
             //21 colors each, 7x3 (8,2 and 8,5 on grid)
             for (int i = 0; i < 20; i++)
             {
-                overworld_AuxPalettes[i] = ReadPalette(romData, RomConstants.overworldPaletteAuxialiary + (i * 21), 21);
+                overworld_AuxPalettes[i] = ReadPalette(romData, RomConstants.overworldPaletteAuxialiary + (i * (21 * 2)), 21);
             }
             //7 colors each 7x1 (0,7 on grid)
             for (int i = 0; i < 14; i++)
             {
-                overworld_AnimatedPalettes[i] = ReadPalette(romData, RomConstants.overworldPaletteAnimated + (i * 7), 7);
+                overworld_AnimatedPalettes[i] = ReadPalette(romData, RomConstants.overworldPaletteAnimated + (i * (7 * 2)), 7);
             }
 
         }
