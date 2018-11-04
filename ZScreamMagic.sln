@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2050
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZScreamMagic", "ZScreamMagic\ZScreamMagic.csproj", "{DF5BBD21-A5A0-40DE-8E89-722DB9C3C175}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DF5BBD21-A5A0-40DE-8E89-722DB9C3C175}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF5BBD21-A5A0-40DE-8E89-722DB9C3C175}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF5BBD21-A5A0-40DE-8E89-722DB9C3C175}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF5BBD21-A5A0-40DE-8E89-722DB9C3C175}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {908B2DB1-8922-45D0-9560-DFB88C71E236}
+	EndGlobalSection
+EndGlobal
