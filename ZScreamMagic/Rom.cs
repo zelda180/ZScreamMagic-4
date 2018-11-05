@@ -35,6 +35,7 @@ namespace ZScreamMagic
             ZGraphics.CreateAllGfxData(romData);
             ZGraphics.CreateAllPalettes(romData);
 
+
             LogData.SaveToFile("Logs.txt");
             Console.WriteLine("Rom Region Detected : " + romRegion.ToString());
         }

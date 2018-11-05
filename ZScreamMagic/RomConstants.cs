@@ -34,7 +34,7 @@ namespace ZScreamMagic
         //===========================================================================================
         public static int compressedAllMap32PointersHigh = 0x1794D;
         public static int compressedAllMap32PointersLow = 0x17B2D;
-        public static int overworldgfxGroups = 0x05D97;
+        public static int overworldblocksetGroups = 0x05D97;
         public static int map16Tiles = 0x78000;
         public static int map32TilesTL = 0x18000;
         public static int map32TilesTR = 0x1B400;
@@ -44,13 +44,16 @@ namespace ZScreamMagic
         public static int overworldPaletteAuxialiary = 0xDE86C;
         public static int overworldPaletteAnimated = 0xDE604;
         public static int overworldMapPalette = 0x7D1C;
-        public static int overworldSpritePalette = 0x7B81;
+        public static int overworldSpritePalette = 0x7B41;
         public static int overworldMapPaletteGroup = 0x75504;
         public static int overworldMapSize = 0x12844;
         public static int hardcodedGrassLW = 0x75645;
         public static int hardcodedGrassDW = 0x7564F;
         public static int hardcodedGrassSpecial = 0x75640;
-        public static int mapGfx = 0x7C9C;
+        public static int overworldBlockset = 0x7C9C; //$0AA2 is the secondary background graphics index
+        public static int overworldBlockset2 = 0x58F4;//$0AA4
+        public static int overworldSpriteset = 0x7A41;
+        public static int mainGfxGroupset = 0x6073;
         #endregion
 
     }
