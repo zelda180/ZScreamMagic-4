@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
@@ -15,94 +16,205 @@ namespace ZScreamMagic
     public partial class TilesViewer : Form
     {
         Rom rom;
+        OverworldMap[] map = new OverworldMap[64];
 
-        OverworldMap map;
+        //Those Pointers data get filled with data everytime a new map is drawn
+
+        IntPtr tiles16GfxPtr = Marshal.AllocHGlobal((128 * 7520)); //8bpp - Different for every maps
+        Bitmap tiles16Bitmap;
+        IntPtr tiles8GfxPtr = Marshal.AllocHGlobal((128 * 512) / 2); //4bpp - Different for every maps
+        Bitmap tiles8Bitmap;
+
+
         public TilesViewer(Rom rom)
         {
             InitializeComponent();
             this.rom = rom;
+            TilesLoader.LoadTile16(rom);
+            TilesLoader.LoadTile32(rom);
         }
         //What do we need for a tile viewer?
         //Load Tile8 Gfx
         //Load Tile16 Data
         //Load Tile32 Data?
-        Bitmap b = new Bitmap(128, 7136, PixelFormat.Format4bppIndexed);
-        private void TilesViewer_Load(object sender, EventArgs e)
+       
+        private unsafe void TilesViewer_Load(object sender, EventArgs e)
         {
-            Tile16[] tiles16 = TilesLoader.LoadTile16(rom);
 
+
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             //Need to load map data 
-            map = new OverworldMap(rom, 0);
-            //allgfx16Ptr
-            unsafe
+
+            for (int j = 0; j < 64; j++)
             {
-                byte* newPdata = (byte*)ZGraphics.allgfx16Ptr.ToPointer();
-                
-                BitmapData bdata = b.LockBits(new Rectangle(0, 0, 128, 256), ImageLockMode.ReadWrite, PixelFormat.Format4bppIndexed);
-                byte* pdata = (byte*)bdata.Scan0;
-                int sheetPos = 0;
-                for (int i = 0; i < 8; i++)
+                tiles8Bitmap = new Bitmap(128, 7136, 64, PixelFormat.Format4bppIndexed, tiles8GfxPtr);
+                tiles16Bitmap = new Bitmap(128, 7520, 128, PixelFormat.Format8bppIndexed, tiles16GfxPtr);
+                map[j] = new OverworldMap(rom, j);
+                //allgfx16Ptr
+                unsafe
                 {
-                    int d = 0;
-                    while (d < 2048)
+                    byte* newPdata = (byte*)ZGraphics.allgfx16Ptr.ToPointer();
+                    byte* sheetsData = (byte*)tiles8GfxPtr.ToPointer();
+                    int sheetPos = 0;
+                    for (int i = 0; i < 8; i++)
                     {
-                        byte mapByte = newPdata[d + (map.blocksets[i] * 2048)];
-                        switch (i)
+                        int d = 0;
+                        while (d < 2048)
                         {
-                            case 0:
-                            case 3:
-                            case 4:
-                            case 5:
-                                mapByte += 0x88;
-                                break;
+                            byte mapByte = newPdata[d + (map[j].blocksets[i] * 2048)];
+                            switch (i)
+                            {
+                                case 0:
+                                case 3:
+                                case 4:
+                                case 5:
+                                    mapByte += 0x88;
+                                    break;
+                            }
+
+                            sheetsData[d + (sheetPos * 2048)] = mapByte;
+                            d++;
                         }
-                        
-                        pdata[d + (sheetPos * 2048)] = mapByte;
-                        d++;
+                        sheetPos++;
                     }
-                    sheetPos++;
+
                 }
-                b.UnlockBits(bdata);
-                ColorPalette cp = b.Palette;
-                for (int i = 0; i < 16; i++)
+
+                ColorPalette cp = tiles16Bitmap.Palette;
+                for (int i = 0; i < 256; i++)
                 {
-                    cp.Entries[i] = map.palettes[i+32];
+                    cp.Entries[i] = map[j].palettes[i];
                 }
-                b.Palette = cp;
+                tiles16Bitmap.Palette = cp;
+                map[j].mapBitmap.Palette = cp;
+
+                BuildTiles16Gfx(tiles8GfxPtr, tiles16GfxPtr);
+
+                UpdateTilesMap(map[j].mapGfxPtr,j);
             }
+            sw.Stop();
+            Console.WriteLine(sw.ElapsedMilliseconds);
+            //mainTilesDisplay.Image = mapBitmap;
 
-
-            mainTilesDisplay.Image = b;
+            //mainTilesDisplay.Image = b;
             //mainTilesDisplay.Refresh();
             //Need to load Palette Map Data
 
             //Need to load Blockset Map Data
 
             //-> will be able to draw a tile at this point
-
-
-
         }
+
+
+
+        private unsafe void BuildTiles16Gfx(IntPtr allgfx8Ptr, IntPtr allgfx16Ptr)
+        {
+            var gfx16Data = (byte*)allgfx16Ptr.ToPointer();
+            var gfx8Data = (byte*)allgfx8Ptr.ToPointer();
+            int[] offsets = { 0, 8, 1024, 1032 };
+            var yy = 0;
+            var xx = 0;
+
+            //TODO : Get rid of that magic number
+            for (var i = 0; i < 3748; i++) //number of tiles16
+            {
+                //8x8 tile draw
+                //gfx8 = 4bpp so everyting is /2
+                var tiles = TilesLoader.tiles16[i];
+
+                for (var tile = 0; tile < 4; tile++)
+                {
+                    Tile8Data info = tiles.tile8data[tile];
+                    int offset = offsets[tile];
+
+                    for (var y = 0; y < 8; y++)
+                    {
+                        for (var x = 0; x < 4; x++)
+                        {
+                            CopyTile(x, y, xx, yy, offset, info, gfx16Data, gfx8Data);
+                        }
+                    }
+                }
+
+                xx += 16;
+                if (xx >= 128)
+                {
+                    yy += 2048;
+                    xx = 0;
+                }
+            }
+        }
+
+        private unsafe void CopyTile(int x, int y, int xx, int yy, int offset, Tile8Data tile, byte* gfx16Pointer, byte* gfx8Pointer)
+        {
+            int mx = x;
+            int my = y;
+            byte r = 0;
+
+            if (tile.mirror_h)
+            {
+                mx = 3 - x;
+                r = 1;
+            }
+            if (tile.mirror_v)
+            {
+                my = 7 - y;
+            }
+
+            int tx = ((tile.id / 16) * 512) + ((tile.id - ((tile.id / 16) * 16)) * 4);
+            var index = xx + yy + offset + (mx * 2) + (my * 128);
+            var pixel = gfx8Pointer[tx + (y * 64) + x];
+
+            gfx16Pointer[index + r ^ 1] = (byte)((pixel & 0x0F) + tile.palette * 16);
+            gfx16Pointer[index + r] = (byte)(((pixel >> 4) & 0x0F) + tile.palette * 16);
+        }
+
+        private unsafe void UpdateTilesMap(IntPtr mapPtr, int mid)
+        {
+            byte* mapData = (byte*)mapPtr.ToPointer();
+            byte* tile16Data = (byte*)tiles16GfxPtr.ToPointer();
+
+
+                int x = 0;
+                int y = 0;
+                for (int i = 0; i < (32 * 32); i++)
+                {
+                    int srcy = (map[mid].tiles[i] / 8);
+                    int srcx = map[mid].tiles[i] - (srcy * 8);
+
+                    //e.Graphics.DrawImage(tiles16Bitmap, x * 16, y * 16, new Rectangle(srcx * 16, srcy * 16, 16, 16), GraphicsUnit.Pixel);
+                    for (int j = 0; j < 16; j++)//tilecopy
+                    {
+                        for (int k = 0; k < 16; k++)//tilecopy
+                        {
+                            mapData[((x * 16) + (y * 8192)) + (j * 512) + k] = tile16Data[((srcx * 16) + (srcy * 2048)) + (j * 128) + k];
+                        }
+                    }
+
+
+                    x++;
+                    if (x >= 32)
+                    {
+                        x = 0;
+                        y++;
+                    }
+                }
+        }
+
+
 
         private void mainTilesDisplay_Paint(object sender, PaintEventArgs e)
         {
-            /*for(int i = 0;i< 8; i++)
+            int mid = 0;
+            for (int sy = 0; sy < 8; sy++)
             {
-                e.Graphics.DrawImage(b,new Rectangle(0,32*i,128,32),new Rectangle(0,map.blocksets[i]*32,128,32),GraphicsUnit.Pixel);
-            }*/
-
-            /*int y = 0;
-            int x = 0;
-            for (int i = 0;i<256;i++)
-            {
-                e.Graphics.FillRectangle(new SolidBrush(map.palettes[i]), new Rectangle(x*16, y*16, 16, 16));
-                x++;
-                if (x >= 16)
+                for (int sx = 0; sx < 8; sx++)
                 {
-                    x = 0;
-                    y++;
+                    e.Graphics.DrawImage(map[mid].mapBitmap, sx * 512, sy * 512);
+                    mid++;
                 }
-            }*/
+            }
 
             //overworldPaletteGroup1
             //drawMainPalette(e.Graphics, 0);

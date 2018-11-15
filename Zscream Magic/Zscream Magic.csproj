@@ -4,15 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{DF5BBD21-A5A0-40DE-8E89-722DB9C3C175}</ProjectGuid>
+    <ProjectGuid>{6423A534-4FA4-4A20-9BAE-6A890F8834A3}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>ZScreamMagic</RootNamespace>
-    <AssemblyName>ZScreamMagic</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <RootNamespace>Zscream_Magic</RootNamespace>
+    <AssemblyName>Zscream Magic</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
-    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -48,6 +47,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OverworldEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="OverworldEditor.Designer.cs">
+      <DependentUpon>OverworldEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="OverworldMap.cs" />
     <Compile Include="Tile32.cs" />
     <Compile Include="ZGraphics.cs" />
@@ -55,16 +60,12 @@
     <Compile Include="LogData.cs" />
     <Compile Include="RomConstants.cs" />
     <Compile Include="RomRegion.cs" />
-    <Compile Include="MainForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="MainForm.cs" />
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
-    <Compile Include="ProjectForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="ProjectForm.cs" />
     <Compile Include="ProjectForm.Designer.cs">
       <DependentUpon>ProjectForm.cs</DependentUpon>
     </Compile>
@@ -87,6 +88,9 @@
     <Compile Include="ZCompressLibrary\fake_mem.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="OverworldEditor.resx">
+      <DependentUpon>OverworldEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProjectForm.resx">
       <DependentUpon>ProjectForm.cs</DependentUpon>

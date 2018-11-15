@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,28 +15,73 @@ namespace ZScreamMagic
         int mapId;
         byte paletteId;
         byte blocksetId;
+        public IntPtr mapGfxPtr = Marshal.AllocHGlobal(512 * 512); //8bpp - Different for every maps
+        public Bitmap mapBitmap;
         public Color[] palettes = new Color[256]; //
         public byte[] blocksets = new byte[8];
         //All +1 because first color is transparent or grass color
-        int startOfMainPalette = 32 + 1;
-        int startOfAux1Palette = 40 + 1;
-        int startOfAux2Palette = 88 + 1;
-        int startOfAnimatedPalette = 112 + 1;
+        int startOfMainPalette = 32 + 1; //Position of the palette array
+        int startOfAux1Palette = 40 + 1; //Position of the palette array
+        int startOfAux2Palette = 88 + 1; //Position of the palette array
+        int startOfAnimatedPalette = 112 + 1; //Position of the palette array
+
+        public ushort[] tiles = new ushort[32 * 32]; //tile16 
 
         public OverworldMap(Rom rom, int mapId)
         {
             this.rom = rom;
             this.mapId = mapId;
-            LoadMapData();
+            mapBitmap = new Bitmap(512, 512, 512, PixelFormat.Format8bppIndexed, mapGfxPtr);
+            LoadMapData(rom);
         }
 
-        public void LoadMapData()
+        public void LoadMapData(Rom rom)
         {
             LoadPalette(); 
             LoadBlockset();
+            LoadMapTiles(rom);
         }
 
+        public void LoadMapTiles(Rom rom)
+        {
+            //locat functions
 
+            int p1 =
+            (rom.romData[(RomConstants.compressedAllMap32PointersHigh) + 2 + (int)(3 * mapId)] << 16) +
+            (rom.romData[(RomConstants.compressedAllMap32PointersHigh) + 1 + (int)(3 * mapId)] << 8) +
+            (rom.romData[(RomConstants.compressedAllMap32PointersHigh + (int)(3 * mapId))]);
+            p1 = Utils.SnesToPc(p1);
+
+            int p2 =
+            (rom.romData[(RomConstants.compressedAllMap32PointersLow) + 2 + (int)(3 * mapId)] << 16) +
+            (rom.romData[(RomConstants.compressedAllMap32PointersLow) + 1 + (int)(3 * mapId)] << 8) +
+            (rom.romData[(RomConstants.compressedAllMap32PointersLow + (int)(3 * mapId))]);
+            p2 = Utils.SnesToPc(p2);
+
+
+            int ttpos = 0, compressedSize1 = 0, compressedSize2 = 0;
+
+            byte[] bytes = ZCompressLibrary.Decompress.ALTTPDecompressOverworld(rom.romData, p2, 1000, ref compressedSize1);
+            byte[] bytes2 = ZCompressLibrary.Decompress.ALTTPDecompressOverworld(rom.romData, p1, 1000, ref compressedSize2);
+
+            for (int y = 0; y < 16; y++)
+            {
+                for (int x = 0; x < 16; x++)
+                {
+                    ushort tidD = (ushort)((bytes2[ttpos] << 8) + bytes[ttpos]);
+
+                    int tpos = tidD;
+                    if (tpos < TilesLoader.tiles32.Count)
+                    {
+                        tiles[(x * 2) + ((y * 2) * 32)] = TilesLoader.tiles32[tpos].tile16data[0];
+                        tiles[(x * 2)+1 + ((y * 2) * 32)] = TilesLoader.tiles32[tpos].tile16data[1];
+                        tiles[(x * 2) + (((y * 2)+1) * 32)] = TilesLoader.tiles32[tpos].tile16data[2];
+                        tiles[(x * 2)+1 + (((y * 2)+1) * 32)] = TilesLoader.tiles32[tpos].tile16data[3];
+                    }
+                    ttpos += 1;
+                }
+            }
+        }
 
 
         public void LoadBlockset()
@@ -120,12 +167,22 @@ namespace ZScreamMagic
             byte Aux1PaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4) + 0];
             byte Aux2PaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4) + 1];
             byte AnimatedPaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4) + 2];
-
+            updateGrassPalette();
             updateMainPalette(0);
             updateAux1Palette(Aux1PaletteIndex == 255 ? 0 : Aux1PaletteIndex);
             updateAux2Palette(Aux2PaletteIndex == 255 ? 0 : Aux2PaletteIndex);
             updateAnimatedPalette(AnimatedPaletteIndex == 255 ? 0 : AnimatedPaletteIndex);
 
+        }
+
+        public void updateGrassPalette()
+        {
+            Color[] c = ZGraphics.ReadPalette(rom.romData, 0x5FEA9, 1);
+            for (int y = 0; y < 8; y++)
+            {
+                palettes[startOfMainPalette - 1 + (y * 16)] = c[0];
+                palettes[startOfAux1Palette - 1 + (y * 16)] = c[0];
+            }
         }
 
 
