@@ -15,32 +15,112 @@ namespace ZScreamMagic
         int mapId;
         byte paletteId;
         byte blocksetId;
+        byte spritesetId;
         public IntPtr mapGfxPtr = Marshal.AllocHGlobal(512 * 512); //8bpp - Different for every maps
         public Bitmap mapBitmap;
         public Color[] palettes = new Color[256]; //
-        public byte[] blocksets = new byte[8];
+        public byte[] blocksets = new byte[16];
+        public byte mapParent = 0;
         //All +1 because first color is transparent or grass color
+        int startOfHudPalette = 0; //Position of the palette array
         int startOfMainPalette = 32 + 1; //Position of the palette array
         int startOfAux1Palette = 40 + 1; //Position of the palette array
         int startOfAux2Palette = 88 + 1; //Position of the palette array
         int startOfAnimatedPalette = 112 + 1; //Position of the palette array
+        int startOfSpritesPalette = 144 + 1;
+
+        public List<Sprite> spritesList = new List<Sprite>();
+
+        public byte mainPaletteIndex = 0;
+        public byte Aux1PaletteIndex = 0;
+        public byte Aux2PaletteIndex = 0;
+        public byte AnimatedPaletteIndex = 0;
+        public byte SpritePaletteIndex = 0;
 
         public ushort[] tiles = new ushort[32 * 32]; //tile16 
+
+        //TODO : Replace "worldState" that in the Overworld Editor not here
+        public WorldState worldState = WorldState.ZeldaRescued;
 
         public OverworldMap(Rom rom, int mapId)
         {
             this.rom = rom;
             this.mapId = mapId;
+            mapParent = rom.romData[RomConstants.overworldmapParent + mapId];
             mapBitmap = new Bitmap(512, 512, 512, PixelFormat.Format8bppIndexed, mapGfxPtr);
             LoadMapData(rom);
+
+            
         }
 
         public void LoadMapData(Rom rom)
         {
-            LoadPalette(); 
+            LoadPalette();
             LoadBlockset();
             LoadMapTiles(rom);
+            LoadSprites(worldState);
         }
+
+        public void LoadSprites(WorldState worldState)
+        {
+
+            //spritesList.Add(new Sprite(4, 4, 0, 0, 0,(byte)mapId));
+            int pointerPos = 0;
+            if (worldState == WorldState.RainState)
+            {
+                pointerPos = RomConstants.overworldSpritesBegining;
+            }
+            else if (worldState == WorldState.ZeldaRescued)
+            {
+                pointerPos = RomConstants.overworldSpritesZelda;
+            }
+            else if (worldState == WorldState.AgahnimDefeated)
+            {
+                pointerPos = RomConstants.overworldSpritesAgahnim;
+            }
+            //Bank of overworld sprites is 09
+
+            int snesPointer = (09<<16) +
+                (rom.romData[pointerPos + (mapId * 2) + 1] << 8) +
+                rom.romData[pointerPos + (mapId * 2)];
+
+            int spritesAddress = Utils.SnesToPc(snesPointer);
+
+            //Loading sprite routine !
+            while (true)
+            {
+
+                byte b1 = rom.romData[spritesAddress];
+                byte b2 = rom.romData[spritesAddress + 1];
+                byte b3 = rom.romData[spritesAddress + 2];
+
+                if (b1 == 0xFF) { break; }
+
+                byte x = (byte)(b2 & 0x3F);
+                byte y = (byte)(b1 & 0x3F);
+
+                //Code to shift the sprite away on the next map if X or Y > 512
+                byte mapOn = (byte)mapId;
+                if (x > 32)
+                {
+                    mapOn += 1;
+                    x -= 32;
+                }
+                if (y > 32)
+                {
+                    mapOn += 8;
+                    y -= 32;
+                }
+
+                spritesList.Add(new Sprite(x,y,b3,0,0,(byte)mapOn));
+
+
+                spritesAddress += 3;
+            }
+
+        }
+
+
 
         public void LoadMapTiles(Rom rom)
         {
@@ -122,7 +202,7 @@ namespace ZScreamMagic
             //There's 4 blockset per group
 
             byte v0AA1 = 0x20;
-            byte v0AA2 = rom.romData[RomConstants.overworldBlockset + mapId];
+            byte v0AA2 = rom.romData[RomConstants.overworldBlockset + mapParent];
             //byte v0AA3 = 0x20; Sprites useless for now
             //byte v0AA4 = 0x20;//Animated GFX i think
             if (mapId < 0x40)
@@ -149,6 +229,33 @@ namespace ZScreamMagic
                 }
             }
 
+            if (mapParent >= 3 && mapParent <= 7)
+            {
+                blocksets[7] = 0x58;
+            }
+            else
+            {
+                blocksets[7] = 0x5A;
+            }
+
+
+
+            //TODO : Add a worldstate variable
+            //Load Sprites Blocksets
+            spritesetId = rom.romData[RomConstants.overworldSpriteset + mapParent + 0x40];
+
+            blocksets[8] = 115 + 0;
+            blocksets[9] = 115 + 1;
+            blocksets[10] = 115 + 6;
+            blocksets[11] = 115 + 7;
+
+            blocksets[12] = (byte)(115 + rom.romData[RomConstants.spriteGroupset + (spritesetId * 4) + 0]);
+            blocksets[13] = (byte)(115 + rom.romData[RomConstants.spriteGroupset + (spritesetId * 4) + 1]);
+            blocksets[14] = (byte)(115 + rom.romData[RomConstants.spriteGroupset + (spritesetId * 4) + 2]);
+            blocksets[15] = (byte)(115 + rom.romData[RomConstants.spriteGroupset + (spritesetId * 4) + 3]);
+
+
+
             //rom.romData[ + (blocksetId * 4)];
         }
 
@@ -158,26 +265,66 @@ namespace ZScreamMagic
             {
                 palettes[i] = new Color();
             }
+
+            //Load from PalettesHandler
+
+            //NVM
+
+
             //there's 4 palette per group
-            paletteId = (byte)(rom.romData[RomConstants.overworldMapPalette + mapId]);
+            paletteId = (byte)(rom.romData[RomConstants.overworldMapPalette + mapParent]);
+
+            mainPaletteIndex = 0;
+            Aux1PaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4) + 0];
+            Aux2PaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4) + 1];
+            AnimatedPaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4) + 2];
+            SpritePaletteIndex = rom.romData[RomConstants.overworldSpritePalette];
+            updateGrassPalette();
+
+
+
 
             //Palettes Infos : 
             //0-31 -> Hud Palettes
             //byte mainPaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4)];
-            byte Aux1PaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4) + 0];
-            byte Aux2PaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4) + 1];
-            byte AnimatedPaletteIndex = rom.romData[RomConstants.overworldMapPaletteGroup + (paletteId * 4) + 2];
-            updateGrassPalette();
-            updateMainPalette(0);
+
+
+            if (mapParent >= 3 && mapParent <= 7)
+            {
+                mainPaletteIndex = 2;
+            }
+
+
+            updateMainPalette(mainPaletteIndex);
             updateAux1Palette(Aux1PaletteIndex == 255 ? 0 : Aux1PaletteIndex);
             updateAux2Palette(Aux2PaletteIndex == 255 ? 0 : Aux2PaletteIndex);
             updateAnimatedPalette(AnimatedPaletteIndex == 255 ? 0 : AnimatedPaletteIndex);
+            updateSpritesPalettes(SpritePaletteIndex == 255 ? 0 : SpritePaletteIndex);
+            updateHudPalette(0);
 
+        }
+
+        public void updateSpritesPalettes(int index)
+        {
+            //Index will be used for the "map specific sprites palettes"
+            int v = 0;
+            int a = 0;
+            for (int x = 0; x < 15*4; x++)
+            {
+                //This is global sprite palettes
+                palettes[startOfSpritesPalette + x + a] = Palettes.globalSprite_Palettes[0][x];
+                v++;
+                if (v >= 15)
+                {
+                    v = 0;
+                    a++;
+                }
+            }
         }
 
         public void updateGrassPalette()
         {
-            Color[] c = ZGraphics.ReadPalette(rom.romData, 0x5FEA9, 1);
+            Color[] c = Palettes.overworld_GrassPalettes;
             for (int y = 0; y < 8; y++)
             {
                 palettes[startOfMainPalette - 1 + (y * 16)] = c[0];
@@ -192,7 +339,7 @@ namespace ZScreamMagic
             {
                 for (int x = 0; x < 7; x++)
                 {
-                    palettes[startOfMainPalette + x + (y * 16)] = ZGraphics.overworld_MainPalettes[index][x + (y * 7)];
+                    palettes[startOfMainPalette + x + (y * 16)] = Palettes.overworld_MainPalettes[index][x + (y * 7)];
                 }
             }
         }
@@ -203,7 +350,7 @@ namespace ZScreamMagic
             {
                 for (int x = 0; x < 7; x++)
                 {
-                    palettes[startOfAux1Palette + x + (y * 16)] = ZGraphics.overworld_AuxPalettes[index][x + (y * 7)];
+                    palettes[startOfAux1Palette + x + (y * 16)] = Palettes.overworld_AuxPalettes[index][x + (y * 7)];
                 }
             }
         }
@@ -214,7 +361,7 @@ namespace ZScreamMagic
             {
                 for (int x = 0; x < 7; x++)
                 {
-                    palettes[startOfAux2Palette + x + (y * 16)] = ZGraphics.overworld_AuxPalettes[index][x + (y * 7)];
+                    palettes[startOfAux2Palette + x + (y * 16)] = Palettes.overworld_AuxPalettes[index][x + (y * 7)];
                 }
             }
         }
@@ -223,10 +370,17 @@ namespace ZScreamMagic
         {
             for (int x = 0; x < 7; x++)
             {
-                palettes[startOfAnimatedPalette + x] = ZGraphics.overworld_AnimatedPalettes[index][x];
+                palettes[startOfAnimatedPalette + x] = Palettes.overworld_AnimatedPalettes[index][x];
             }
         }
 
+        public void updateHudPalette(int index)
+        {
+            for (int x = 0; x < 32; x++)
+            {
+                palettes[startOfHudPalette + x] = Palettes.HudPalettes[index][x];
+            }
+        }
 
 
     }

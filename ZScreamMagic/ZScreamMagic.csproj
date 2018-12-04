@@ -33,6 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -48,10 +49,32 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsmExporter.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AsmExporter.Designer.cs">
+      <DependentUpon>AsmExporter.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ColorChangedUndo.cs" />
     <Compile Include="OverworldMap.cs" />
+    <Compile Include="PaletteDescription.cs" />
+    <Compile Include="PaletteEditorSingle.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PaletteEditorSingle.Designer.cs">
+      <DependentUpon>PaletteEditorSingle.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Palettes.cs" />
+    <Compile Include="PaletteViewerMap.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PaletteViewerMap.Designer.cs">
+      <DependentUpon>PaletteViewerMap.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Sprite.cs" />
     <Compile Include="Tile32.cs" />
+    <Compile Include="WorldState.cs" />
     <Compile Include="ZGraphics.cs" />
-    <Compile Include="GFX.cs" />
     <Compile Include="LogData.cs" />
     <Compile Include="RomConstants.cs" />
     <Compile Include="RomRegion.cs" />
@@ -85,8 +108,17 @@
     <Compile Include="ZCompressLibrary\compression_piece.cs" />
     <Compile Include="ZCompressLibrary\Decompress.cs" />
     <Compile Include="ZCompressLibrary\fake_mem.cs" />
+    <EmbeddedResource Include="AsmExporter.resx">
+      <DependentUpon>AsmExporter.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PaletteEditorSingle.resx">
+      <DependentUpon>PaletteEditorSingle.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PaletteViewerMap.resx">
+      <DependentUpon>PaletteViewerMap.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProjectForm.resx">
       <DependentUpon>ProjectForm.cs</DependentUpon>

@@ -69,5 +69,13 @@ namespace ZScreamMagic
                 }
             }
         }
+
+        private void exportPalettesToASMToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AsmExporter exporter = new AsmExporter();
+            exporter.richTextBox1.Text = Palettes.SavePalettesToAsm(projectForm.romManager.romData);
+            exporter.ShowDialog();
+
+        }
     }
 }

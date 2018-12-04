@@ -13,9 +13,8 @@ namespace ZScreamMagic
     public static class ZGraphics
     {
         public static IntPtr allgfx16Ptr = Marshal.AllocHGlobal((128 * 7136) / 2);
-        public static Color[][] overworld_MainPalettes = new Color[6][]; // 35 colors each, 7x5 (0,2 on grid)
-        public static Color[][] overworld_AuxPalettes = new Color[20][]; //21 colors each, 7x3 (8,2 and 8,5 on grid)
-        public static Color[][] overworld_AnimatedPalettes = new Color[14][]; //7 colors each 7x1 (0,7 on grid)
+
+
 
         public static bool[] isbpp3 = new bool[223];
 
@@ -217,45 +216,7 @@ namespace ZScreamMagic
 
         }
 
-        public static Color[] ReadPalette(byte[] romData, int romPosition, int colorCount)
-        {
-            //Lets write new palette code since i can't find the old one :scream:
-            int colorPos = 0;
-            Color[] colors = new Color[colorCount];
-            while (colorPos < colorCount)
-            {
-                short color = (short)((romData[romPosition + 1] << 8) + romData[romPosition]);
-                colors[colorPos] = Color.FromArgb((color & 0x1F) * 8, ((color >> 5) & 0x1F) * 8, ((color >> 10) & 0x1F) * 8);
-                colorPos++;
-                romPosition += 2;
-            }
-
-            return colors;
-        }
-
-        public static void CreateAllPalettes(byte[] romData)
-        {
-            //public static Color[][] overworld_MainPalettes = new Color[6][]; 
-            //public static Color[][] overworld_AuxPalettes = new Color[20][]; 
-            //public static Color[][] overworld_AnimatedPalettes = new Color[14][]; 
-
-            //35 colors each, 7x5 (0,2 on grid)
-            for (int i = 0; i < 6; i++)
-            {
-                overworld_MainPalettes[i] = ReadPalette(romData, RomConstants.overworldPaletteMain + (i * (35*2)), 35);
-            }
-            //21 colors each, 7x3 (8,2 and 8,5 on grid)
-            for (int i = 0; i < 20; i++)
-            {
-                overworld_AuxPalettes[i] = ReadPalette(romData, RomConstants.overworldPaletteAuxialiary + (i * (21 * 2)), 21);
-            }
-            //7 colors each 7x1 (0,7 on grid)
-            for (int i = 0; i < 14; i++)
-            {
-                overworld_AnimatedPalettes[i] = ReadPalette(romData, RomConstants.overworldPaletteAnimated + (i * (7 * 2)), 7);
-            }
-
-        }
+   
 
     }
 }

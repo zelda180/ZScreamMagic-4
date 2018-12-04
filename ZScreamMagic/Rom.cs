@@ -33,7 +33,7 @@ namespace ZScreamMagic
             romRegion = DetectRomRegion(romData);
             //Create all gfx data in Graphics static class as 4bpp indexed format
             ZGraphics.CreateAllGfxData(romData);
-            ZGraphics.CreateAllPalettes(romData);
+            Palettes.CreateAllPalettes(romData);
 
 
             LogData.SaveToFile("Logs.txt");
@@ -42,6 +42,7 @@ namespace ZScreamMagic
 
         public void SaveRom(FileStream file)
         {
+            Palettes.SavePalettesToROM(romData);
             file.Write(romData, 0, romData.Length);
         }
 
